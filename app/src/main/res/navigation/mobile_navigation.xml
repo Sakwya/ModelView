@@ -22,4 +22,8 @@
         android:name="top.sakwya.modelview.ui.slideshow.SlideshowFragment"
         android:label="@string/menu_slideshow"
         tools:layout="@layout/fragment_slideshow" />
+    <fragment
+        android:id="@+id/nav_view"
+        android:name="top.sakwya.modelview.ui.view.ViewFragment"
+        android:label="ViewFragment" />
 </navigation>
