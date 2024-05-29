@@ -21,13 +21,18 @@ const light_setup = () => {
 
 const main = () => {
 	let scene = new THREE.Scene();
+	window.scene = scene
 	let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	// const camera = new THREE.OrthographicCamera(-window.innerWidth*0.5 / window.innerHeight,window.innerWidth*0.5 / window.innerHeight,1,-0, 1, 1000);
 
 	let renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
 
-	let currentModel = new THREE.Object3D();
+
+	const current = {}
+	window.current = current
+	current.model = new THREE.Object3D();
 	let controls = new THREE.OrbitControls(camera, renderer.domElement);
 	scene.background = new THREE.Color(0x404040); // 灰色背景
 
@@ -61,40 +66,37 @@ const main = () => {
 		model.scale.set(scale, scale, scale);
 
 		box = new THREE.Box3().setFromObject(model);
-		const helper = new THREE.Box3Helper(box, 0xffff00);
-		scene.add(helper);
+
+		box.getCenter(center)
 
 		const group = new THREE.Group();
-
 		group.position.x = size.x / maxDimension * -0.5
 		group.position.z = size.z / maxDimension * -0.5
-		group.position.y = size.y / maxDimension * 0.5 
+		group.position.y = size.y / maxDimension * 0.5
 		group.add(model);
 		model.position.x = size.x / maxDimension * 0.5
 		model.position.z = size.z / maxDimension * 0.5
 		model.position.y = size.y / maxDimension * -0.5
+
+		group.position.sub(center)
+		// const helper = new THREE.Box3Helper(box, 0xffff00);
+		// scene.add(helper);
+
 		// group.position.copy(center);
 		// console.log(group)
 		return group
 	}
 
 	// 加载模型的函数
-	const loadModel = async function(modelUrl) {
-		return new Promise((resolve, reject) => {
+	const loadModel = function(modelUrl) {
+		scene.remove(current.model);
 
-			if (currentModel) {
-				scene.remove(currentModel);
-			}
+		let loader = new THREE.GLTFLoader();
+		loader.load(modelUrl, function(gltf) {
+			current.model = calculateScaleToFit(gltf.scene)
 
-			let loader = new THREE.GLTFLoader();
-			loader.load(modelUrl, function(gltf) {
-				temp = calculateScaleToFit(gltf.scene)
-				// console.log(temp)
-				currentModel = temp
-				scene.add(currentModel);
-			});
-			resolve()
-		})
+			scene.add(current.model);
+		});
 	}
 	camera.position.z = 2;
 	var animationRunning = true
@@ -108,9 +110,9 @@ const main = () => {
 			return
 		}
 		requestAnimationFrame(animate);
-		currentModel.rotation.x += 0.1 * (rotation.x - currentModel.rotation.x);
-		currentModel.rotation.y += 0.1 * (rotation.y - currentModel.rotation.y);
-		currentModel.rotation.z += 0.1 * (rotation.z - currentModel.rotation.z);
+		current.model.rotation.x += 0.1 * (rotation.x - current.model.rotation.x);
+		current.model.rotation.y += 0.1 * (rotation.y - current.model.rotation.y);
+		current.model.rotation.z += 0.1 * (rotation.z - current.model.rotation.z);
 
 		renderer.render(scene, camera);
 	};
@@ -129,9 +131,9 @@ const main = () => {
 
 	}
 	const setPosition = function(x, y, z) {
-		currentModel.children[0].position.x = x
-		currentModel.children[0].position.y = y
-		currentModel.children[0].position.z = z
+		current.model.children[0].position.x = x
+		current.model.children[0].position.y = y
+		current.model.children[0].position.z = z
 	}
 	const setRotation = function(x, y, z) {
 		rotation.x += (x - rotation.x) % (2 * Math.PI)
@@ -143,16 +145,19 @@ const main = () => {
 		rotation.y = y
 		rotation.z = z
 	}
-	// loadModel("./assets/blue_archivekasumizawa_miyu/scene.gltf").then(animate())
-	// loadModel("./assets/city.glb").then(animate())
-	loadModel("glb://assets/just_a_girl.glb").then(animate())
+	// loadModel("glb://assets/blue_archivekasumizawa_miyu/scene.gltf").then(animate())
+//	loadModel("glb://assets/city.glb")
+	
+	animate()
 	return {
 		startRender,
 		stopRender,
 		setPosition,
 		setRotation,
 		setRawRotation,
-		light_intensity
+		light_intensity,
+		loadModel
 	}
 }
 const render = main()
+render.loadModel("glb://assets/just_a_girl.glb")

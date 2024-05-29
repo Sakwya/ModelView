@@ -140,6 +140,7 @@ const main = () => {
 		rotation.y += (y - rotation.y) % (2 * Math.PI)
 		rotation.z += (z - rotation.z) % (2 * Math.PI)
 	}
+	window.r = setRotation
 	const setRawRotation = function(x, y, z) {
 		rotation.x = x
 		rotation.y = y
