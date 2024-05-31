@@ -20,6 +20,7 @@ const light_setup = () => {
 }
 
 const main = () => {
+const PI2 = Math.PI*2
 	let scene = new THREE.Scene();
 	window.scene = scene
 	let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -34,6 +35,9 @@ const main = () => {
 	window.current = current
 	current.model = new THREE.Object3D();
 	let controls = new THREE.OrbitControls(camera, renderer.domElement);
+	const axesHelper = new THREE.AxesHelper( 5 );
+	scene.add( axesHelper );
+
 	scene.background = new THREE.Color(0x404040); // 灰色背景
 
 	const light_array = light_setup()
@@ -70,17 +74,25 @@ const main = () => {
 		box.getCenter(center)
 
 		const group = new THREE.Group();
-		group.position.x = size.x / maxDimension * -0.5
-		group.position.z = size.z / maxDimension * -0.5
-		group.position.y = size.y / maxDimension * 0.5
+		// group.position.x = size.x / maxDimension * -0.5
+		// group.position.z = size.z / maxDimension * -0.5
+		// group.position.y = size.y / maxDimension * 0.5
+		model.position.sub(center)
 		group.add(model);
-		model.position.x = size.x / maxDimension * 0.5
-		model.position.z = size.z / maxDimension * 0.5
-		model.position.y = size.y / maxDimension * -0.5
+		// model.position.x = size.x / maxDimension * 0.5
+		// model.position.z = size.z / maxDimension * 0.5
+		// model.position.y = size.y / maxDimension * -0.5
 
-		group.position.sub(center)
-		// const helper = new THREE.Box3Helper(box, 0xffff00);
-		// scene.add(helper);
+		// group.position.sub(center)
+
+		const geometry = new THREE.BoxGeometry( 0.025, 0.025, 0.025 );
+		const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		const cube = new THREE.Mesh( geometry, material );
+		scene.add( cube );
+		cube.position.copy(group.position)
+
+		const helper = new THREE.Box3Helper(box, 0xffff00);
+		scene.add(helper);
 
 		// group.position.copy(center);
 		// console.log(group)
@@ -110,10 +122,29 @@ const main = () => {
 			return
 		}
 		requestAnimationFrame(animate);
-		current.model.rotation.x += 0.1 * (rotation.x - current.model.rotation.x);
-		current.model.rotation.y += 0.1 * (rotation.y - current.model.rotation.y);
-		current.model.rotation.z += 0.1 * (rotation.z - current.model.rotation.z);
+		let temp = (rotation.x - current.model.rotation.x) % PI2
+		if (temp < 0) temp += PI2
+		if (temp < Math.PI) {
+			current.model.rotation.x += 0.05 * temp;
+		} else {
+			current.model.rotation.x -= 0.05 * (PI2 - temp);
+		}
 
+		temp = (rotation.y - current.model.rotation.y) % PI2
+		if (temp < 0) temp += PI2
+		if (temp < Math.PI) {
+			current.model.rotation.y += 0.05 * temp;
+		} else {
+			current.model.rotation.y -= 0.05 * (PI2 - temp);
+		}
+
+		temp = (rotation.z - current.model.rotation.z) % PI2
+		if (temp < 0) temp += PI2
+		if (temp < Math.PI) {
+			current.model.rotation.z += 0.05 * temp;
+		} else {
+			current.model.rotation.z -= 0.05 * (PI2 - temp);
+		}
 		renderer.render(scene, camera);
 	};
 	const stopRender = function() {
@@ -140,14 +171,15 @@ const main = () => {
 		rotation.y += (y - rotation.y) % (2 * Math.PI)
 		rotation.z += (z - rotation.z) % (2 * Math.PI)
 	}
+	window.r = setRotation
 	const setRawRotation = function(x, y, z) {
 		rotation.x = x
 		rotation.y = y
 		rotation.z = z
 	}
-	// loadModel("glb://assets/blue_archivekasumizawa_miyu/scene.gltf").then(animate())
-//	loadModel("glb://assets/city.glb")
-	
+	// loadModel("./assets/blue_archivekasumizawa_miyu/scene.gltf").then(animate())
+	// loadModel("./assets/city.glb")
+
 	animate()
 	return {
 		startRender,

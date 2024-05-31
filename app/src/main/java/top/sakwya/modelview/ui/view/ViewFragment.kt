@@ -19,19 +19,21 @@ import androidx.fragment.app.Fragment
 import top.sakwya.modelview.databinding.FragmentViewBinding
 import java.io.IOException
 import java.io.InputStream
-import kotlin.math.PI
-import kotlin.math.asin
 
 
 class ViewFragment : Fragment(), SensorEventListener {
 
     private var _binding: FragmentViewBinding? = null
+    private var obFlag: Boolean = false
+    private var obAngles: FloatArray = FloatArray(3)
 
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
 
     private lateinit var sensorManager: SensorManager
+    private var gravity: FloatArray? = null
+    private var geomagnetic: FloatArray? = null
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
@@ -42,6 +44,11 @@ class ViewFragment : Fragment(), SensorEventListener {
         _binding = FragmentViewBinding.inflate(inflater, container, false)
         sensorManager = requireActivity().getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
+        binding.fab.setOnClickListener {
+            run {
+                obFlag = true
+            }
+        }
         val webView = binding.page
         webView.settings.javaScriptEnabled = true
         webView.webViewClient = WebViewClient()
@@ -56,7 +63,6 @@ class ViewFragment : Fragment(), SensorEventListener {
                 // 如果请求的是本地文件，则自定义处理
                 println(url)
                 if (url.startsWith("glb://")) {
-                    println("Getttttttttttttttttttttttttttttttti!!")
                     try {
                         // 从assets目录中读取本地文件内容
                         val inputStream: InputStream = requireContext().assets
@@ -76,7 +82,6 @@ class ViewFragment : Fragment(), SensorEventListener {
                             inputStream
                         )
                     } catch (e: IOException) {
-                        println("wronnnnnnnnnnnnnnnnnnnnnnnnnng!!")
                         e.printStackTrace()
                     }
                 }
@@ -99,6 +104,16 @@ class ViewFragment : Fragment(), SensorEventListener {
             sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),
             SensorManager.SENSOR_DELAY_NORMAL
         )
+        sensorManager.registerListener(
+            this,
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY),
+            SensorManager.SENSOR_DELAY_NORMAL
+        )
+        sensorManager.registerListener(
+            this,
+            sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD),
+            SensorManager.SENSOR_DELAY_NORMAL
+        )
 
         super.onResume()
     }
@@ -115,25 +130,79 @@ class ViewFragment : Fragment(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
+            obAngles[0] = 1F
             when (it.sensor.type) {
+                Sensor.TYPE_GRAVITY -> {
+                    gravity = it.values
+                }
+
+                Sensor.TYPE_MAGNETIC_FIELD -> {
+                    geomagnetic = it.values;
+                }
+
+
                 Sensor.TYPE_ROTATION_VECTOR -> {
+                    return
                     val rotationVector = it.values.clone()
-                    println(rotationVector[0].toString() + " " + rotationVector[1].toString() + " " + rotationVector[2].toString())
+//                    println(rotationVector[0].toString() + " " + rotationVector[1].toString() + " " + rotationVector[2].toString())
                     val rotationMatrix = FloatArray(9)
                     val orientationAngles = FloatArray(3)
                     SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector);
                     SensorManager.getOrientation(rotationMatrix, orientationAngles)
+                    if (obFlag) {
+                        obAngles = orientationAngles.clone()
+                        obFlag = false
+                    }
                     binding.page.evaluateJavascript(
                         "render.setRotation(${
-                            orientationAngles[1]+ PI*2
+                            orientationAngles[1] - obAngles[1]
                         }, ${
-                            orientationAngles[2]+ PI*2
+                            -orientationAngles[2] + obAngles[2]
                         },${
-                            orientationAngles[0]+ PI*2
+                            orientationAngles[0] - obAngles[0]
                         })"
-                    ) { result ->
-                        { println(result) }
+                    ) {}
+                    println(
+                        "render.setRotation(${
+                            orientationAngles[1] - obAngles[1]
+                        }, ${
+                            -orientationAngles[2] + obAngles[2]
+                        },${
+                            orientationAngles[0] - obAngles[0]
+                        })"
+                    )
+                }
+            }
+            if (gravity != null && geomagnetic != null) {
+                val R = FloatArray(9)
+                val I = FloatArray(9)
+                val success = SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)
+                if (success) {
+                    val orientationAngles = FloatArray(3)
+                    SensorManager.getOrientation(R, orientationAngles)
+                    if (obFlag) {
+                        obAngles = orientationAngles.clone()
+                        obFlag = false
                     }
+                    binding.page.evaluateJavascript(
+                        "render.setRotation(${
+                            orientationAngles[1] - obAngles[1]
+                        }, ${
+                            -orientationAngles[2] + obAngles[2]
+                        },${
+                            orientationAngles[0] - obAngles[0]
+                        })"
+                    ) {}
+                    println(
+                        "render.setRotation(${
+                            orientationAngles[1] - obAngles[1]
+                        }, ${
+                            -orientationAngles[2] + obAngles[2]
+                        },${
+                            orientationAngles[0] - last!![0]
+                        })"
+                    )
+                    last = orientationAngles.clone()
                 }
             }
         }
