@@ -7,6 +7,18 @@
 
     <fragment
         android:id="@+id/nav_view"
-        android:name="top.sakwya.modelview.ui.view.ViewFragment"
-        android:label="ViewFragment" />
+        android:name="top.sakwya.modelview.fragment.ViewFragment"
+        android:label="ViewFragment" >
+        <action
+            android:id="@+id/action_nav_view_to_configFragment"
+            app:destination="@id/configFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/configFragment"
+        android:name="top.sakwya.modelview.fragment.ConfigFragment"
+        android:label="ConfigFragment" >
+        <action
+            android:id="@+id/action_configFragment_to_nav_view"
+            app:destination="@id/nav_view" />
+    </fragment>
 </navigation>

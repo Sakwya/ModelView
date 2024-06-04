@@ -23,22 +23,18 @@ const main = () => {
 	const PI2 = 2 * Math.PI
 	let scene = new THREE.Scene();
 	window.scene = scene
-	let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+	const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 	// const camera = new THREE.OrthographicCamera(-window.innerWidth*0.5 / window.innerHeight,window.innerWidth*0.5 / window.innerHeight,1,-0, 1, 1000);
 
-	let renderer = new THREE.WebGLRenderer();
+	const renderer = new THREE.WebGLRenderer({ alpha: true ,antialias: true});
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	document.body.appendChild(renderer.domElement);
-
+    renderer.setClearColor(0x00000000, 0);
 
 	const current = {}
 	window.current = current
 	current.model = new THREE.Object3D();
 	let controls = new THREE.OrbitControls(camera, renderer.domElement);
-	const axesHelper = new THREE.AxesHelper(5);
-	scene.add(axesHelper);
-
-	scene.background = new THREE.Color(0x404040); // 灰色背景
 
 	const light_array = light_setup()
 	for (const light of light_array) {
@@ -52,7 +48,6 @@ const main = () => {
 
 	function calculateScaleToFit(model) {
 		var box = new THREE.Box3().setFromObject(model);
-
 
 		const size = new THREE.Vector3();
 		let center = new THREE.Vector3();
@@ -74,30 +69,17 @@ const main = () => {
 		box.getCenter(center)
 
 		const group = new THREE.Group();
-		// group.position.x = size.x / maxDimension * -0.5
-		// group.position.z = size.z / maxDimension * -0.5
-		// group.position.y = size.y / maxDimension * 0.5
 		model.position.sub(center)
 		group.add(model);
-		// model.position.x = size.x / maxDimension * 0.5
-		// model.position.z = size.z / maxDimension * 0.5
-		// model.position.y = size.y / maxDimension * -0.5
 
-		// group.position.sub(center)
+//		const geometry = new THREE.BoxGeometry(0.025, 0.025, 0.025);
+//		const material = new THREE.MeshBasicMaterial({
+//			color: 0x00ff00
+//		});
+//		const cube = new THREE.Mesh(geometry, material);
+//		scene.add(cube);
+//		cube.position.copy(group.position)
 
-		const geometry = new THREE.BoxGeometry(0.025, 0.025, 0.025);
-		const material = new THREE.MeshBasicMaterial({
-			color: 0x00ff00
-		});
-		const cube = new THREE.Mesh(geometry, material);
-		scene.add(cube);
-		cube.position.copy(group.position)
-
-		// const helper = new THREE.Box3Helper(box, 0xffff00);
-		// scene.add(helper);
-
-		// group.position.copy(center);
-		// console.log(group)
 		return group
 	}
 
@@ -125,33 +107,8 @@ const main = () => {
 			return
 		}
 		setTimeout(requestAnimationFrame(animate), 100)
-		currentQuaternion.slerp(targetQuaternion, 0.2);
-		model.quaternion.copy(currentQuaternion);
-		// requestAnimationFrame(animate);
-		// let temp = (rotation.x - current.model.rotation.x) % PI2
-		// if (temp < 0) temp += PI2
-		// if (temp < Math.PI) {
-		// 	current.model.rotation.x += 0.05 * temp;
-		// } else {
-		// 	current.model.rotation.x -= 0.05 * (PI2 - temp);
-		// }
-
-		// temp = (rotation.y - current.model.rotation.y) % PI2
-		// if (temp < 0) temp += PI2
-		// if (temp < Math.PI) {
-		// 	current.model.rotation.y += 0.05 * temp;
-		// } else {
-		// 	current.model.rotation.y -= 0.05 * (PI2 - temp);
-		// }
-
-		// temp = (rotation.z - current.model.rotation.z) % PI2
-		// if (temp < 0) temp += PI2
-		// if (temp < Math.PI) {
-		// 	current.model.rotation.z += 0.05 * temp;
-		// } else {
-		// 	current.model.rotation.z -= 0.05 * (PI2 - temp);
-		// }
-
+		currentQuaternion.slerp(targetQuaternion, 0.75);
+		current.model.quaternion.copy(currentQuaternion);
 		renderer.render(scene, camera);
 	};
 	const stopRender = function() {
@@ -164,9 +121,7 @@ const main = () => {
 		}
 		animationRunning = true
 		controls.update();
-
 		requestAnimationFrame(animate)
-
 	}
 	const setPosition = function(x, y, z) {
 		current.model.children[0].position.x = x
@@ -174,73 +129,20 @@ const main = () => {
 		current.model.children[0].position.z = z
 	}
 
-	function modPi(x) {
-		let temp = x % (PI2)
-		if (temp < 0) return PI2 + temp
-		return temp
-	}
-	const setRotation = function(x, y, z) {
-		rotation.x = modPi(x)
-		rotation.y = modPi(y)
-		rotation.z = modPi(z)
-	}
-	window.r = setRotation
-	const setRawRotation = function(x, y, z) {
-		rotation.x = x
-		rotation.y = y
-		rotation.z = z
-	}
 	// loadModel("./assets/blue_archivekasumizawa_miyu/scene.gltf").then(animate())
 	// loadModel("./assets/city.glb")
 	const setQuaternion = function(q0, q1, q2, q3) {
 		targetQuaternion.set(q1, q2, q3, q0);
 	}
 
-
-
-
-	navigator.mediaDevices.getUserMedia({
-		video: true
-	}).then(function(stream) {
-		var video = document.createElement('video');
-		video.srcObject = stream;
-		video.play();
-
-		// 创建视频纹理
-		var videoTexture = new THREE.VideoTexture(video);
-		videoTexture.minFilter = THREE.LinearFilter;
-		videoTexture.magFilter = THREE.LinearFilter;
-		videoTexture.format = THREE.RGBFormat;
-
-		// 创建一个全屏四边形
-		var geometry = new THREE.PlaneGeometry(5 * camera.aspect, 5);
-		var material = new THREE.MeshBasicMaterial({
-			map: videoTexture
-		});
-		var mesh = new THREE.Mesh(geometry, material);
-
-		// // 调整四边形的位置和缩放
-		mesh.position.set(0, 0, -1);
-		// mesh.scale.set(camera.aspect, 1, 1);
-
-		// 添加四边形到场景
-		scene.add(mesh);
-
-	}).catch(function(error) {
-		console.error('Error accessing the camera:', error);
-	});
-
 	animate()
 	return {
 		startRender,
 		stopRender,
 		setPosition,
-		setRotation,
-		setRawRotation,
 		setQuaternion,
 		light_intensity,
 		loadModel
 	}
 }
 const render = main()
-render.loadModel("glb://assets/just_a_girl.glb")
