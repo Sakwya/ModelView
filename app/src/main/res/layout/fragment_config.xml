@@ -20,15 +20,21 @@
             android:id="@+id/use_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minHeight="48dp"
             android:text="@string/use_camera"
-            android:textSize="18sp"
-            android:minHeight="48dp"/>
+            android:textSize="18sp" />
 
         <Spinner
             android:id="@+id/spinner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"/>
+            android:minHeight="48dp" />
+
+        <Button
+            android:id="@+id/add_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/add_model" />
 
     </LinearLayout>
 

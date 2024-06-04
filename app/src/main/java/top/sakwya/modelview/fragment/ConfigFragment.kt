@@ -2,6 +2,9 @@ package top.sakwya.modelview.fragment
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.ContentResolver
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -17,13 +20,46 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import top.sakwya.modelview.databinding.FragmentConfigBinding
 import top.sakwya.modelview.viewmodel.SharedViewModel
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 class ConfigFragment : Fragment() {
 
     private var _binding: FragmentConfigBinding? = null
-
-    // This property is only valid between onCreateView and
-    // onDestroyView.
+    private val fileLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+                data?.data?.let { uri ->
+                    val inputStream = requireContext().contentResolver.openInputStream(uri)
+                    val fileName = uri.lastPathSegment ?: "file.glb"
+                    println(uri.path)
+                    if (fileName.endsWith(".glb") || fileName.endsWith(".gltf")) {
+                        inputStream?.use { input ->
+                            val outputFile = File(requireContext().filesDir, fileName)
+                            val outputStream = FileOutputStream(outputFile)
+                            outputStream.use { output ->
+                                input.copyTo(output)
+                            }
+                            // 将文件复制到 assets 文件夹中
+                            copyFileToAssets(outputFile)
+                            Toast.makeText(
+                                requireContext(),
+                                "复制完成",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            "文件类型不符合 *.glb/*.gltf",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            }
+        }
     private val binding get() = _binding!!
     private val sharedViewModel: SharedViewModel by activityViewModels()
     private val requestPermissionLauncher =
@@ -55,9 +91,7 @@ class ConfigFragment : Fragment() {
 
 
         val spinner: Spinner = binding.spinner
-        val options = requireContext().assets.list("models")?: emptyArray()
-        println(sharedViewModel.modelName.value)
-        println(options.indexOf(sharedViewModel.modelName.value))
+        val options = requireContext().assets.list("models") ?: emptyArray()
         // 创建 ArrayAdapter
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, options)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -102,7 +136,34 @@ class ConfigFragment : Fragment() {
                 sharedViewModel.setUseCamera(false)
             }
         }
+
+        binding.addButton.setOnClickListener { openFilePicker() }
+
         return binding.root
+    }
+
+    private fun openFilePicker() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.type = "*/*" // 设置要选择的文件类型
+        fileLauncher.launch(intent)
+    }
+
+    private fun copyFileToAssets(file: File) {
+        val assetsDir = File("file:///android_asset/model")
+        val outputFile = File(assetsDir, file.name)
+
+        try {
+            val inputStream = FileInputStream(file)
+            val outputStream = FileOutputStream(outputFile)
+            inputStream.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+            Toast.makeText(requireContext(), "文件传输完成", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            // 处理异常
+        }
     }
 
     override fun onResume() {

@@ -15,4 +15,5 @@
     <string name="use_camera">使用摄像头</string>
     <string name="config">Config</string>
     <string name="go_to_config">go to config</string>
+    <string name="add_model">添加模型</string>
 </resources>
