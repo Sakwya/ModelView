@@ -93,8 +93,8 @@ const main = () => {
 		scene.add(cube);
 		cube.position.copy(group.position)
 
-		const helper = new THREE.Box3Helper(box, 0xffff00);
-		scene.add(helper);
+		// const helper = new THREE.Box3Helper(box, 0xffff00);
+		// scene.add(helper);
 
 		// group.position.copy(center);
 		// console.log(group)
@@ -108,7 +108,6 @@ const main = () => {
 		let loader = new THREE.GLTFLoader();
 		loader.load(modelUrl, function(gltf) {
 			current.model = calculateScaleToFit(gltf.scene)
-
 			scene.add(current.model);
 		});
 	}
@@ -132,7 +131,7 @@ const main = () => {
 		} else {
 			current.model.rotation.x -= 0.05 * (PI2 - temp);
 		}
-		
+
 		temp = (rotation.y - current.model.rotation.y) % PI2
 		if (temp < 0) temp += PI2
 		if (temp < Math.PI) {
@@ -140,7 +139,7 @@ const main = () => {
 		} else {
 			current.model.rotation.y -= 0.05 * (PI2 - temp);
 		}
-		
+
 		temp = (rotation.z - current.model.rotation.z) % PI2
 		if (temp < 0) temp += PI2
 		if (temp < Math.PI) {
@@ -148,7 +147,7 @@ const main = () => {
 		} else {
 			current.model.rotation.z -= 0.05 * (PI2 - temp);
 		}
-		
+
 		renderer.render(scene, camera);
 	};
 	const stopRender = function() {
@@ -189,6 +188,43 @@ const main = () => {
 	}
 	// loadModel("./assets/blue_archivekasumizawa_miyu/scene.gltf").then(animate())
 	// loadModel("./assets/city.glb")
+	const setQuaternion = function(q0, q1, q2, q3) {
+		current.model.quaternion.copy(new THREE.Quaternion(q1, q2, q3, q0));
+	}
+
+
+
+
+	navigator.mediaDevices.getUserMedia({
+		video: true
+	}).then(function(stream) {
+		var video = document.createElement('video');
+		video.srcObject = stream;
+		video.play();
+
+		// 创建视频纹理
+		var videoTexture = new THREE.VideoTexture(video);
+		videoTexture.minFilter = THREE.LinearFilter;
+		videoTexture.magFilter = THREE.LinearFilter;
+		videoTexture.format = THREE.RGBFormat;
+
+		// 创建一个全屏四边形
+		var geometry = new THREE.PlaneGeometry(5 * camera.aspect, 5);
+		var material = new THREE.MeshBasicMaterial({
+			map: videoTexture
+		});
+		var mesh = new THREE.Mesh(geometry, material);
+
+		// // 调整四边形的位置和缩放
+		mesh.position.set(0, 0, -1);
+		// mesh.scale.set(camera.aspect, 1, 1);
+
+		// 添加四边形到场景
+		scene.add(mesh);
+
+	}).catch(function(error) {
+		console.error('Error accessing the camera:', error);
+	});
 
 	animate()
 	return {
@@ -197,6 +233,7 @@ const main = () => {
 		setPosition,
 		setRotation,
 		setRawRotation,
+		setQuaternion,
 		light_intensity,
 		loadModel
 	}

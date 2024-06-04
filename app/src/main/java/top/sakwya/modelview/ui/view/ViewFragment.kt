@@ -142,13 +142,10 @@ class ViewFragment : Fragment(), SensorEventListener {
 
 
                 Sensor.TYPE_ROTATION_VECTOR -> {
-                    return
                     val rotationVector = it.values.clone()
 //                    println(rotationVector[0].toString() + " " + rotationVector[1].toString() + " " + rotationVector[2].toString())
-                    val rotationMatrix = FloatArray(9)
-                    val orientationAngles = FloatArray(3)
-                    SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector);
-                    SensorManager.getOrientation(rotationMatrix, orientationAngles)
+                    val quaternion = FloatArray(4)
+                    SensorManager.getQuaternionFromVector(quaternion, rotationVector);
                     if (obFlag) {
                         obAngles = orientationAngles.clone()
                         obFlag = false
@@ -173,38 +170,38 @@ class ViewFragment : Fragment(), SensorEventListener {
                     )
                 }
             }
-            if (gravity != null && geomagnetic != null) {
-                val R = FloatArray(9)
-                val I = FloatArray(9)
-                val success = SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)
-                if (success) {
-                    val orientationAngles = FloatArray(3)
-                    SensorManager.getOrientation(R, orientationAngles)
-                    if (obFlag) {
-                        obAngles = orientationAngles.clone()
-                        obFlag = false
-                    }
-                    binding.page.evaluateJavascript(
-                        "render.setRotation(${
-                            orientationAngles[1] - obAngles[1]
-                        }, ${
-                            -orientationAngles[2] + obAngles[2]
-                        },${
-                            orientationAngles[0] - obAngles[0]
-                        })"
-                    ) {}
-                    println(
-                        "render.setRotation(${
-                            orientationAngles[1] - obAngles[1]
-                        }, ${
-                            -orientationAngles[2] + obAngles[2]
-                        },${
-                            orientationAngles[0] - last!![0]
-                        })"
-                    )
-                    last = orientationAngles.clone()
-                }
-            }
+//            if (gravity != null && geomagnetic != null) {
+//                val R = FloatArray(9)
+//                val I = FloatArray(9)
+//                val success = SensorManager.getRotationMatrix(R, I, gravity, geomagnetic)
+//                if (success) {
+//                    val orientationAngles = FloatArray(3)
+//                    SensorManager.getOrientation(R, orientationAngles)
+//                    if (obFlag) {
+//                        obAngles = orientationAngles.clone()
+//                        obFlag = false
+//                    }
+//                    binding.page.evaluateJavascript(
+//                        "render.setRotation(${
+//                            orientationAngles[1] - obAngles[1]
+//                        }, ${
+//                            -orientationAngles[2] + obAngles[2]
+//                        },${
+//                            orientationAngles[0] - obAngles[0]
+//                        })"
+//                    ) {}
+//                    println(
+//                        "render.setRotation(${
+//                            orientationAngles[1] - obAngles[1]
+//                        }, ${
+//                            -orientationAngles[2] + obAngles[2]
+//                        },${
+//                            orientationAngles[0] - obAngles[0]
+//                        })"
+//                    )
+//                    obAngles = orientationAngles.clone()
+//                }
+//            }
         }
     }
 
