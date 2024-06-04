@@ -118,35 +118,39 @@ const main = () => {
 		'y': 0,
 		'z': 0
 	}
+	const targetQuaternion = new THREE.Quaternion();
+	const currentQuaternion = new THREE.Quaternion();
 	const animate = function() {
 		if (!animationRunning) {
 			return
 		}
-		setTimeout(requestAnimationFrame(animate), 500)
+		setTimeout(requestAnimationFrame(animate), 100)
+		currentQuaternion.slerp(targetQuaternion, 0.2);
+		model.quaternion.copy(currentQuaternion);
 		// requestAnimationFrame(animate);
-		let temp = (rotation.x - current.model.rotation.x) % PI2
-		if (temp < 0) temp += PI2
-		if (temp < Math.PI) {
-			current.model.rotation.x += 0.05 * temp;
-		} else {
-			current.model.rotation.x -= 0.05 * (PI2 - temp);
-		}
+		// let temp = (rotation.x - current.model.rotation.x) % PI2
+		// if (temp < 0) temp += PI2
+		// if (temp < Math.PI) {
+		// 	current.model.rotation.x += 0.05 * temp;
+		// } else {
+		// 	current.model.rotation.x -= 0.05 * (PI2 - temp);
+		// }
 
-		temp = (rotation.y - current.model.rotation.y) % PI2
-		if (temp < 0) temp += PI2
-		if (temp < Math.PI) {
-			current.model.rotation.y += 0.05 * temp;
-		} else {
-			current.model.rotation.y -= 0.05 * (PI2 - temp);
-		}
+		// temp = (rotation.y - current.model.rotation.y) % PI2
+		// if (temp < 0) temp += PI2
+		// if (temp < Math.PI) {
+		// 	current.model.rotation.y += 0.05 * temp;
+		// } else {
+		// 	current.model.rotation.y -= 0.05 * (PI2 - temp);
+		// }
 
-		temp = (rotation.z - current.model.rotation.z) % PI2
-		if (temp < 0) temp += PI2
-		if (temp < Math.PI) {
-			current.model.rotation.z += 0.05 * temp;
-		} else {
-			current.model.rotation.z -= 0.05 * (PI2 - temp);
-		}
+		// temp = (rotation.z - current.model.rotation.z) % PI2
+		// if (temp < 0) temp += PI2
+		// if (temp < Math.PI) {
+		// 	current.model.rotation.z += 0.05 * temp;
+		// } else {
+		// 	current.model.rotation.z -= 0.05 * (PI2 - temp);
+		// }
 
 		renderer.render(scene, camera);
 	};
@@ -189,7 +193,7 @@ const main = () => {
 	// loadModel("./assets/blue_archivekasumizawa_miyu/scene.gltf").then(animate())
 	// loadModel("./assets/city.glb")
 	const setQuaternion = function(q0, q1, q2, q3) {
-		current.model.quaternion.copy(new THREE.Quaternion(q1, q2, q3, q0));
+		targetQuaternion.set(q1, q2, q3, q0);
 	}
 
 

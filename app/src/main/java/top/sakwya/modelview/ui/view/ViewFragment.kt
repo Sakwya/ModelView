@@ -25,7 +25,7 @@ class ViewFragment : Fragment(), SensorEventListener {
 
     private var _binding: FragmentViewBinding? = null
     private var obFlag: Boolean = false
-    private var obAngles: FloatArray = FloatArray(3)
+    private var recordQuaternion: FloatArray = FloatArray(4)
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -130,7 +130,7 @@ class ViewFragment : Fragment(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
-            obAngles[0] = 1F
+            recordQuaternion[0] = 1F
             when (it.sensor.type) {
                 Sensor.TYPE_GRAVITY -> {
                     gravity = it.values
@@ -143,31 +143,26 @@ class ViewFragment : Fragment(), SensorEventListener {
 
                 Sensor.TYPE_ROTATION_VECTOR -> {
                     val rotationVector = it.values.clone()
-//                    println(rotationVector[0].toString() + " " + rotationVector[1].toString() + " " + rotationVector[2].toString())
                     val quaternion = FloatArray(4)
                     SensorManager.getQuaternionFromVector(quaternion, rotationVector);
                     if (obFlag) {
-                        obAngles = orientationAngles.clone()
+                        recordQuaternion[0] = quaternion[0]
+                        recordQuaternion[1] = -quaternion[1]
+                        recordQuaternion[2] = -quaternion[2]
+                        recordQuaternion[3] = -quaternion[3]
                         obFlag = false
                     }
                     binding.page.evaluateJavascript(
-                        "render.setRotation(${
-                            orientationAngles[1] - obAngles[1]
+                        "render.setQuaternion(${
+                            quaternion[3] * recordQuaternion[0] + quaternion[0] * recordQuaternion[3] + quaternion[1] * recordQuaternion[2] - quaternion[2] * recordQuaternion[1]
                         }, ${
-                            -orientationAngles[2] + obAngles[2]
+                            quaternion[3] * recordQuaternion[1] - quaternion[0] * recordQuaternion[2] + quaternion[1] * recordQuaternion[3] + quaternion[2] * recordQuaternion[0]
                         },${
-                            orientationAngles[0] - obAngles[0]
+                            quaternion[3] * recordQuaternion[2] + quaternion[0] * recordQuaternion[1] - quaternion[1] * recordQuaternion[0] + quaternion[2] * recordQuaternion[3]
+                        },${
+                            quaternion[3] * recordQuaternion[3] - quaternion[0] * recordQuaternion[0] - quaternion[1] * recordQuaternion[1] - quaternion[2] * recordQuaternion[2]
                         })"
                     ) {}
-                    println(
-                        "render.setRotation(${
-                            orientationAngles[1] - obAngles[1]
-                        }, ${
-                            -orientationAngles[2] + obAngles[2]
-                        },${
-                            orientationAngles[0] - obAngles[0]
-                        })"
-                    )
                 }
             }
 //            if (gravity != null && geomagnetic != null) {
